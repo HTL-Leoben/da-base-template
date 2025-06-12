@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    name: Changelog
+    if: github.event_name != 'pull_request' 
+    runs-on: ubuntu-latest
+
+    outputs:
+      skipped: ${{ steps.changelog.outputs.skipped }}
+      tag: ${{ steps.changelog.outputs.tag }}
+      clean_changelog: ${{ steps.changelog.outputs.clean_changelog }}
+      version: ${{ steps.changelog.outputs.version }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Changelog
+        uses: TriPSs/conventional-changelog-action@v6
+        id: changelog
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          git-user-name: "github-actions[bot]"
+          git-user-email: "github-actions[bot]@users.noreply.github.com"
+          skip-git-pull: true
+          preset: conventionalcommits
+          input-file: CHANGELOG.md
+          output-file: CHANGELOG.md
+          version-file: .github/version-info.yml
+
+  build:
+    name: Build Executables
+    needs: changelog
+    if: github.event_name != 'pull_request' && needs.changelog.outputs.skipped == 'false'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build Executable
+        run: pyinstaller tools/time/time-calculator.py --onefile --name time-calculator
+
+      - name: Make Executables Executable
+        if: runner.os != 'Windows'
+        run: chmod +x dist/time-calculator
+
+      - name: Rename Executable
+        shell: bash
+        run: |
+          mkdir dist-out
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            mv dist/time-calculator.exe dist-out/time-calculator-windows.exe
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            mv dist/time-calculator dist-out/time-calculator-macos
+          else
+            mv dist/time-calculator dist-out/time-calculator
+          fi
+
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          mkdir package
+          cp dist-out/time-calculator package/
+          tar -czvf time-calculator-linux.tar.gz -C package time-calculator
+
+      - name: Upload Windows/macOS Executables
+        if: runner.os != 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-calculator-${{ runner.os }}
+          path: dist-out/*
+
+      - name: Upload Linux Archive
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-calculator-linux
+          path: time-calculator-linux.tar.gz
+
+  release:
+    name: Release
+    needs: [changelog, build]
+    if: github.event_name != 'pull_request' && needs.changelog.outputs.skipped == 'false'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        with:
+          tag_name: ${{ needs.changelog.outputs.tag }}
+          name: ${{ needs.changelog.outputs.tag }}
+          body: ${{ needs.changelog.outputs.clean_changelog }}
+          files: |
+            artifacts/time-calculator-windows.exe
+            artifacts/time-calculator-macos
+            artifacts/time-calculator-linux.tar.gz
