@@ -110,6 +110,21 @@ Der erste Befehl verhindert, dass Änderungen an Berechtigungen (wie sie WSL im 
 
 Falls das Template durch HG geändert wird, können Sie mit Hilfe des Befehls `git submodule update --remote` ihre derzeitige Version durch die jeweils aktuellste Version des Templates ersetzen. Damit die Änderungen sichtbar werden müssen Sie natürlich die Diplomarbeit vorher neu bauen.
 
+## Hinzufügen des Templates als git-subtree
+
+Erstmal den subtree hinzufügen
+
+````sh
+git subtree add --prefix=da-base-template https://github.com/HTL-Leoben/da-base-template.git main --squash
+````
+
+und bei änderungen updaten
+
+````sh
+git subtree pull --prefix=da-base-template https://github.com/HTL-Leoben/da-base-template.git main --squash
+````
+
+
 ### Auschecken eines Diplomarbeitsrepositories eines anderen Teammitgliedes
 
 Sollten die ganzen obigen Schritte bereits durch eines Ihrer Teammitglieder erledigt worden sein, dann reicht es aus wenn sie sich das Repository inklusive der Submodule einfach klonen.
