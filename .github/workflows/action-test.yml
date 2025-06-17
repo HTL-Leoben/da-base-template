@@ -17,6 +17,14 @@ jobs:
       - name: Clone Diploma Thesis Repository
         run: git clone https://github.com/HTL-Leoben/da-template
 
+      - name: Check 1
+        shell: bash
+        run: ls -la /
+
+      - name: Check 2
+        shell: bash
+        run: ls -la
+
       - name: Build And Send Diploma Thesis
         uses: HTL-Leoben/da-base-template@main
         with:

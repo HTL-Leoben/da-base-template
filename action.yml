@@ -54,6 +54,14 @@ runs:
       shell: bash
       run: echo "thesis-path=${{ inputs.manual-mode }}/${{ inputs.thesis-path }}" >> $GITHUB_ENV
   
+    - name: Check 1
+      shell: bash
+      run: ls -la ${{ inputs.thesis-path }}
+
+    - name: Check 2
+      shell: bash
+      run: ls -la ${{ inputs.thesis-path }}/da-base-template
+
     - name: Cache Docker Image
       id: cache-docker
       uses: actions/cache@v4
