@@ -14,18 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Create Diploma Thesis Folder
-        run: |
-          mkdir Diplomarbeit
-          mkdir Diplomarbeit/HTLLE-DA-Vorlage
-          cp -r example/* Diplomarbeit/
-          cp -r style tools Jenkinsfile Makefile Diplomarbeit/HTLLE-DA-Vorlage
+      - name: Clone Diploma Thesis Repository
+        run: git clone https://github.com/HTL-Leoben/da-template
 
       - name: Build And Send Diploma Thesis
-        uses: bitsneak/HTLLE-DA-Vorlage@main
+        uses: HTL-Leoben/da-base-template@main
         with:
           manual-mode: ${{ github.workspace }}
           mail-body: The Action 'Build and send diploma thesis' was successfully tested

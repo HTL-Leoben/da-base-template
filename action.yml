@@ -34,8 +34,8 @@ inputs:
     default: bytebang
     required: false
   dockerhub-repository:
-    description: The DockerHub repository name for the image. If not set it will default to 'htlle-da-env'
-    default: htlle-da-env
+    description: The DockerHub repository name for the image. If not set it will default to 'htlle-da-builder'
+    default: htlle-da-builder
     required: false
   manual-mode:
     description: If the repository should not be checked out automatically specify the complete workspace path to the thesis-path. If not set it will default to checking out the latest repository state
@@ -53,10 +53,6 @@ runs:
       if: ${{ inputs.manual-mode }}
       shell: bash
       run: echo "thesis-path=${{ inputs.manual-mode }}/${{ inputs.thesis-path }}" >> $GITHUB_ENV
-
-    - name: Check Template Folder
-      shell: bash
-      run: ls -la ${{ inputs.thesis-path }}/HTLLE-DA-Vorlage
   
     - name: Cache Docker Image
       id: cache-docker
