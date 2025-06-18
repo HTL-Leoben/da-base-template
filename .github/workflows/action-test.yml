@@ -2,8 +2,8 @@ name: Test Action
 
 on:
   push:
-    #paths: Debug vise commented out
-      #- action.yml
+    paths:
+      - action.yml
   pull_request:
     paths:
       - action.yml
@@ -17,37 +17,8 @@ jobs:
       - name: Clone Diploma Thesis Repository
         run: git clone https://github.com/HTL-Leoben/da-template
 
-      - name: Check 1
-        shell: bash
-        run: ls -la /
-
-      - name: Check 2
-        shell: bash
-        run: ls -la ~
-
-      - name: Check 3
-        shell: bash
-        run: ls -la
-
-      - name: Check 3.5
-        shell: bash
-        run: pwd
-
-      - name: Setup Diploma Thesis Folder
-        run: |
-          mv da-template/* .
-
-      - name: Check 4
-        shell: bash
-        run: ls -la
-
-      - name: Check 5
-        shell: bash
-        run: ls -la Diplomarbeit
-
-      - name: Check 6
-        shell: bash
-        run: ls -la Diplomarbeit/da-base-template/
+      - name: Setup Folder Structure
+        run: mv da-template/* .
 
       - name: Build And Send Diploma Thesis
         uses: HTL-Leoben/da-base-template@main
