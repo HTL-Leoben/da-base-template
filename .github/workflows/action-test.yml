@@ -2,8 +2,8 @@ name: Test Action
 
 on:
   push:
-    paths:
-      - action.yml
+    #paths: Debug vise commented out
+      #- action.yml
   pull_request:
     paths:
       - action.yml
