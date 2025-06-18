@@ -29,10 +29,13 @@ jobs:
         shell: bash
         run: ls -la
 
+      - name: Check 3.5
+        shell: bash
+        run: pwd
+
       - name: Setup Diploma Thesis Folder
         run: |
-          mkdir -p Diplomarbeit
-          mv da-template/* Diplomarbeit/
+          mv da-template/* .
 
       - name: Check 4
         shell: bash
