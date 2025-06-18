@@ -23,7 +23,28 @@ jobs:
 
       - name: Check 2
         shell: bash
+        run: ls -la ~
+
+      - name: Check 3
+        shell: bash
         run: ls -la
+
+      - name: Setup Diploma Thesis Folder
+        run: |
+          mkdir -p Diplomarbeit
+          mv da-template/* Diplomarbeit/
+
+      - name: Check 4
+        shell: bash
+        run: ls -la
+
+      - name: Check 5
+        shell: bash
+        run: ls -la Diplomarbeit
+
+      - name: Check 6
+        shell: bash
+        run: ls -la Diplomarbeit/da-base-template/
 
       - name: Build And Send Diploma Thesis
         uses: HTL-Leoben/da-base-template@main

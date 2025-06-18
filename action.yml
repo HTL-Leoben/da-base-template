@@ -56,9 +56,17 @@ runs:
   
     - name: Check 1
       shell: bash
-      run: ls -la ${{ inputs.thesis-path }}
+      run: ls -la /
 
     - name: Check 2
+      shell: bash
+      run: ls -la ~
+
+    - name: Check 3
+      shell: bash
+      run: ls -la ${{ inputs.thesis-path }}
+
+    - name: Check 4
       shell: bash
       run: ls -la ${{ inputs.thesis-path }}/da-base-template
 
