@@ -1,3 +1,10 @@
+## 0.1.3 (2025-06-18)
+
+
+### Bug Fixes
+
+* **action:** attempt to fix action test paths [#1](https://github.com/HTL-Leoben/da-base-template/issues/1) ([c252d8a](https://github.com/HTL-Leoben/da-base-template/commit/c252d8aeb95bf8dbb3e9cc88d71869124b194c32))
+
 ## 0.1.2 (2025-06-18)
 
 
