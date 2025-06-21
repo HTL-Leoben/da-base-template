@@ -8,23 +8,28 @@ ENV LANG=C.UTF-8 \
 # Update the package list and install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl \
-    tree \
-    rsync \
-    git \
-    make \
-    build-essential \
-    texlive-full \
-    pandoc \
-    pandoc-citeproc \
-    hunspell \
-    hunspell-de-at \
-    hunspell-en-us && \
+        curl \
+        tree \
+        rsync \
+        git \
+        make \
+        build-essential \
+        texlive-full \
+        pandoc \
+        pandoc-citeproc \
+        hunspell \
+        hunspell-de-at \
+        hunspell-en-us && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /workspace
 
+# Copy the entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+# Make the entrypoint script executable
+RUN chmod +x /entrypoint.sh
+
 # Set the entrypoint to the script
-ENTRYPOINT ["make", "pdf", "-C", "da-base-template", "SOURCEDIR=/workspace"]
+ENTRYPOINT ["/entrypoint.sh"]
