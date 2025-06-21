@@ -1,3 +1,10 @@
+## 0.1.7 (2025-06-21)
+
+
+### Bug Fixes
+
+* **make:** fixed default underscorde warning  [#3](https://github.com/HTL-Leoben/da-base-template/issues/3) ([81b8b12](https://github.com/HTL-Leoben/da-base-template/commit/81b8b1211da51d8a9f0588893c95789fbcfd999d))
+
 ## 0.1.6 (2025-06-18)
 
 
