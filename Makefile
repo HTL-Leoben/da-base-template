@@ -11,6 +11,7 @@ METADATAFILE = $(INPUTDIR)/metadata.yaml
 OUTPUTFILE = $(OUTPUTDIR)/diplomarbeit.pdf
 LOGFILE = $(OUTPUTFILE).log
 SPELLERRORFILE = $(OUTPUTDIR)/spellcheck-results.txt
+TEMPLATENAME = da-base-template
 
 SHELL := /bin/bash
 
@@ -38,7 +39,7 @@ build-stage:
 	@echo "Copying source files into the staging directory"
 	@rsync -av $(SOURCEDIR)/ $(STAGINGDIR) \
 	--cvs-exclude \
-	--exclude=HTLLE-DA-Vorlage \
+	--exclude=$(TEMPLATENAME) \
 	--exclude=$(OUTPUTFILE) \
 	--exclude=$(LOGFILE) \
 	--quiet
