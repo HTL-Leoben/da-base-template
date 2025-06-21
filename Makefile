@@ -84,7 +84,6 @@ compile-output:
 	@rsync -az $(OUTPUTFILE) $(SOURCEDIR)/
 	
 do-spellcheck:
-
 	@echo "Performing a spellcheck on all Markdown files"
 
     # Überprüft die staging Dateien auf Rechtschreibfehler
@@ -92,9 +91,8 @@ do-spellcheck:
 
     # Ausgabe der Rechtschreibfehler
 	@echo '-------------------8<-------------------------'
-	#@cat "$(SPELLERRORFILE)" | sort | uniq | sed 's/^/   /'
-	@ls "$(STAGINGDIR)"/*.md | xargs -I {} -r0 echo "Working on "{}" file ..." | xargs -I {} -r0 echo "{}" 
-
+    # @cat "$(SPELLERRORFILE)" | sort | uniq | sed 's/^/   /'
+	@for file in $(STAGINGDIR)/*.md; do echo "Working on $$file ..."; done
 	@echo '------------------->8-------------------------'
 
     # Spell resultate zurueckkopieren
@@ -104,7 +102,6 @@ remove-stage:
     #Remove the staging directory
 	@echo "Removing the staging directory"
 	@rm -rf $(STAGINGDIR)
-
 
 # Targets which are intended to be used directly
 spellcheck: build-stage do-spellcheck remove-stage
