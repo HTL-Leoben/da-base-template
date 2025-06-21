@@ -1,3 +1,10 @@
+## 0.2.0 (2025-06-21)
+
+
+### Features
+
+* **docker:** docker image can now use all makefile targets ([34d002b](https://github.com/HTL-Leoben/da-base-template/commit/34d002b5800a59b95a957c0441aec7b04aa0e50a))
+
 ## 0.1.7 (2025-06-21)
 
 
