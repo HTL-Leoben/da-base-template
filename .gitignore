@@ -1,3 +1,6 @@
-pandoc.log
-output/*
+/*.pdf
+/*.log
+/spellcheck-results.txt
+/diplomarbeit.pdf.tex
+/*/staging
 *.DS_Store
