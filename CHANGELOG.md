@@ -1,3 +1,10 @@
+## 0.3.0 (2025-06-22)
+
+
+### Features
+
+* **action:** the sending option when building the diploma thesis is now optional ([98ff847](https://github.com/HTL-Leoben/da-base-template/commit/98ff8472e811cfb9fb24b3872c089483a235843f))
+
 ## 0.2.0 (2025-06-21)
 
 
