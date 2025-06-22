@@ -21,7 +21,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.docker
-          key: ${{ runner.os }}-docker-${{ hashFiles('**/HTLLE-DA-Vorlage/tools/docker/Dockerfile') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/da-base-template/tools/docker/Dockerfile') }}
           restore-keys: ${{ runner.os }}-docker-
 
       - name: Create Docker Cache Directory
@@ -35,11 +35,11 @@ jobs:
       - name: Pull Docker Image
         if: steps.cache-docker.outputs.cache-hit != 'true'
         run: |
-          docker pull bytebang/htlle-da-env
-          docker save bytebang/htlle-da-env -o /tmp/.docker/image.tar
+          docker pull bytebang/htlle-da-builder
+          docker save bytebang/htlle-da-builder -o /tmp/.docker/image.tar
 
       - name: Build Diploma Thesis
-        run: docker run -v ${{ github.workspace }}/Diplomarbeit:/workspace bytebang/htlle-da-env
+        run: docker run -v ${{ github.workspace }}/Diplomarbeit:/workspace bytebang/htlle-da-builder
 
       - name: Upload Diploma Thesis
         uses: actions/upload-artifact@v4
@@ -49,6 +49,7 @@ jobs:
 
   send:
     needs: build-upload
+    if: success()
     runs-on: ubuntu-latest
 
     steps:
@@ -64,12 +65,12 @@ jobs:
       - name: Send Diploma Thesis
         uses: dawidd6/action-send-mail@v5
         with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.MAIL }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "Diploma thesis"
-          body: ${{ env.commit_message }}
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
           to: ${{ secrets.TEAMS_MAIL }}
           from: ${{ secrets.MAIL }}
+          subject: "Diploma thesis"
+          body: ${{ env.commit_message }}
           attachments: diplomarbeit.pdf

@@ -24,7 +24,7 @@ jobs:
       - name: Build Diploma Thesis
         run: |
           cd Diplomarbeit
-          make pdf -C HTLLE-DA-Vorlage SOURCEDIR=$(pwd)
+          make pdf -C da-base-template SOURCEDIR=$(pwd)
 
       - name: Upload Diploma Thesis
         uses: actions/upload-artifact@v4
@@ -34,6 +34,7 @@ jobs:
 
   send:
       needs: build-upload
+      if: success()
       runs-on: ubuntu-latest
 
       steps:
@@ -49,12 +50,12 @@ jobs:
         - name: Send Diploma Thesis
           uses: dawidd6/action-send-mail@v5
           with:
-            server_address: ${{ secrets.SMTP_SERVER }}
-            server_port: ${{ secrets.SMTP_PORT }}
             username: ${{ secrets.MAIL }}
             password: ${{ secrets.MAIL_PASSWORD }}
-            subject: "Diploma thesis"
-            body: ${{ env.commit_message }}
+            server_address: ${{ secrets.SMTP_SERVER }}
+            server_port: ${{ secrets.SMTP_PORT }}
             to: ${{ secrets.TEAMS_MAIL }}
             from: ${{ secrets.MAIL }}
+            subject: "Diploma thesis"
+            body: ${{ env.commit_message }}
             attachments: diplomarbeit.pdf

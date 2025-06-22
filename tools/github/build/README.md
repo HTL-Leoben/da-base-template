@@ -12,7 +12,7 @@ The workflow `Build and send diploma thesis` allows the user to build the diplom
 
 ### Repository
 
-Create a folder `.github/workflows` in the root of your repository. You can now choose between `diploma-thesis-docker.yml`, `diploma-thesis-manual.yml` and `diploma-thesis-action.yml` to paste into the newly created folder. It is recommended to rename the chosen GitHub Action variant to `thesis.yml`.
+Create a folder `.github/workflows` in the root of your repository. You can now choose between `diploma-thesis-manual.yml`, `diploma-thesis-docker.yml` and `diploma-thesis-action.yml` to paste into the newly created folder. It is recommended to rename the chosen GitHub Action variant to `thesis.yml`.
 
 - **-manual**
   - installs all the dependencies in the Action itself
@@ -21,8 +21,10 @@ Create a folder `.github/workflows` in the root of your repository. You can now 
   - uses the Docker image
   - runtime: ~3 minutes
 - **-action**
-  - uses the published GitHub Action provided by the [`HTLLE-DA-Vorlage`](https://github.com/bitsneak/HTLLE-DA-Vorlage) repository
+  - uses the published GitHub Action provided by the [`da-base-template`](https://github.com/HTL-Leoben/da-base-template) repository
   - runtime: ~3 minutes
+
+The variants `diploma-thesis-manual.yml` and `diploma-thesis-docker.yml` each contain a [job](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/using-jobs-in-a-workflow#overview) named `send`. This job can be deleted if the diploma thesis should only be built and not sent. Note, that the whole workflow will fail if the diploma thesis file size is too large when sending it, or if any input parameter is incorrect. Regarding the first case, a fix would be either to reduce the size of included images and PDFs or not use the send option. Regardless, the built diploma thesis is always saved as an [artifact](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow#about-workflow-artifacts) in the latest **successful** workflow run.
 
 ### Inputs
 
@@ -30,13 +32,13 @@ This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
 | Name | Required | Description | Default |
 | - | - | - | - |
-| mail-address | `true` | Your email address from which the diploma thesis should be sent from. See [notes](#notes). | - |
-| mail-address-password | `true` | The password for your  email address. See [notes](#notes). | - |
-| smtp-server | `true` | The SMTP server URL corresponding to your email address. | - |
-| smtp-port | `true` | The SMTP port corresponding to your SMTP server. | - |
-| teams-mail | `true` | The teams channel email address from the channel the diploma thesis should be sent to.  | - |
-| thesis-path | `false` | Change the folder name where the template is located. | Diplomarbeit |
+| mail-address | `false` | Your email address from which the diploma thesis should be sent from. See [notes](#notes). <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
+| mail-address-password | `false` | The password for your email address. See [notes](#notes). <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
+| smtp-server | `false` | The SMTP server URL corresponding to your email address. <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
+| smtp-port | `false` | The SMTP port corresponding to your SMTP server. <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
+| teams-mail | `false` | The teams channel email address from the channel the diploma thesis should be sent to. <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
 | mail-body | `false` | Change the email body and therefore the message in teams. | [`git log -1 --pretty=%B`](https://git-scm.com/docs/git-log) |
+| thesis-path | `false` | Change the folder name where the template is located. | Diplomarbeit |
 | dockerhub-username | `false` | Change the Docker Hub username from which the Docker image gets provided. | bytebang |
 | dockerhub-repository | `false` | Change the Docker Hub repository name from which the Docker image gets provided. | htlle-da-env |
 | manual-mode | `false` | If the repository should not be checked out automatically, specify the complete workspace path to `thesis-path`. | [actions/checkout](https://github.com/actions/checkout) |
@@ -45,11 +47,18 @@ This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
 This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
-Minimal:
+Minimal with only build:
 
 ```yml
 - name: Build And Send Diploma Thesis
-  uses: bitsneak/HTLLE-DA-Vorlage@main
+  uses: HTL-Leoben/da-base-template@main
+```
+
+Minimal with build and send:
+
+```yml
+- name: Build And Send Diploma Thesis
+  uses: HTL-Leoben/da-base-template@main
   with:
     mail-address: ${{ secrets.MAIL }}
     mail-address-password: ${{ secrets.MAIL_PASSWORD }}
@@ -62,15 +71,15 @@ Override everything:
 
 ```yml
 - name: Build And Send Diploma Thesis
-  uses: bitsneak/HTLLE-DA-Vorlage@main
+  uses: HTL-Leoben/da-base-template@main
   with:
     mail-address: ${{ secrets.MAIL }}
     mail-address-password: ${{ secrets.MAIL_PASSWORD }}
     smtp-server: ${{ secrets.SMTP_SERVER }}
     smtp-port: ${{ secrets.SMTP_PORT }}
     teams-mail: ${{ secrets.TEAMS_MAIL }}
-    thesis-path: Diplomarbeit
     mail-body: git log -1 --pretty=%B
+    thesis-path: Diplomarbeit
     dockerhub-username: bytebang
     dockerhub-repository: htlle-da-env
     manual-mode: ${{ github.workspace }}
@@ -78,7 +87,7 @@ Override everything:
 
 ### Secrets
 
-In your GitHub repository you need to [create the secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) the Action needs with the information from your corresponding accounts.
+In your GitHub repository you need to [create the secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) the Action needs with the information from your corresponding accounts if you want to send an email / message containing the built diploma thesis.
 
 | Name | Usage |
 | - | - |

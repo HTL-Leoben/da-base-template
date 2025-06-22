@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Build And Send Diploma Thesis
-        uses: bitsneak/HTLLE-DA-Vorlage@main
+        uses: HTL-Leoben/da-base-template@main
         with:
           mail-address: ${{ secrets.MAIL }}
           mail-address-password: ${{ secrets.MAIL_PASSWORD }}
