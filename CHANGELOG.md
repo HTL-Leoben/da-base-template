@@ -1,3 +1,10 @@
+## 0.3.1 (2025-06-28)
+
+
+### Performance Improvements
+
+* **docker:** reduce image size ([4a8f515](https://github.com/HTL-Leoben/da-base-template/commit/4a8f515d28d9c60fe022d0901ec389d554291118))
+
 ## 0.3.0 (2025-06-22)
 
 
