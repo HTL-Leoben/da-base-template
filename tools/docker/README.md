@@ -52,4 +52,4 @@ When using command line arguments, it looks like this *(replace `input` with a b
 docker run -it --rm -v $(pwd):/workspace htlle-da-builder input
 ```
 
-**Authors:** Günther Hutter, Marko Schrempf
+**Authors:** Marko Schrempf, Günther Hutter
