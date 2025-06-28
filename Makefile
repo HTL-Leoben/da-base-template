@@ -31,7 +31,6 @@ help:
 	@echo '                                                                    '
 	@echo ' 																	
 
-
 # Helper Targets
 build-stage:
     # Kopieren der DA-Quellen in das staging Verzeichnis
@@ -92,7 +91,7 @@ do-spellcheck:
     # Ausgabe der Rechtschreibfehler
 	@echo '-------------------8<-------------------------'
     # @cat "$(SPELLERRORFILE)" | sort | uniq | sed 's/^/   /'
-	@for file in $(STAGINGDIR)/*.md; do echo "Working on $$file ..."; done
+	@for file in $(STAGINGDIR)/*.md; do echo "Working on $$file..."; done
 	@echo '------------------->8-------------------------'
 
     # Spell resultate zurueckkopieren

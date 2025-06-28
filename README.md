@@ -124,7 +124,6 @@ und bei änderungen updaten
 git subtree pull --prefix=da-base-template https://github.com/HTL-Leoben/da-base-template.git main --squash
 ````
 
-
 ### Auschecken eines Diplomarbeitsrepositories eines anderen Teammitgliedes
 
 Sollten die ganzen obigen Schritte bereits durch eines Ihrer Teammitglieder erledigt worden sein, dann reicht es aus wenn sie sich das Repository inklusive der Submodule einfach klonen.
@@ -451,4 +450,4 @@ Abschließend noch eine kurze Liste der wichtigsten Punkte, an denen erfahrungsg
 * Literaturverzeichnis: mehrfach zitierte Quellen nur einmal angeführt, Art der Publikation muss in jedem Fall klar sein, konsistente Einträge, Online-Quellen(URLs) sauber angeführt inkl. letztem Betrachtungszeitpunkt
 * Sonstiges: ungültige Querverweise (??), Anhang, Papiergröße der PDF-Datei (A4=8.27×11.69Zoll), Druckgröße und -qualität.
 
-**Authors:** Günther Hutter, Marko Schrempf
+**Authors:** Günther Hutter
