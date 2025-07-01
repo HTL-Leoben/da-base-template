@@ -25,53 +25,37 @@ It is recommended to create [issues](https://docs.github.com/en/issues/tracking-
 
 ### Script
 
-The script uses the output of the `git log` command as piped input. It supports different flags to search and filter where -u and -i are the only required ones which should be used independently from each other.
+The script supports different flags to search and filter where `-u` and `-i` are the only required ones which should be used independently from each other.
 
 | Flag | Description |
 | - | - |
-| -u |  Total time per email address / user. |
-| -i | Total time per issue. |
-| -a | Show detailed breakdown. Used with -u or -i. |
-| -s | Sort output alphabetically or by total time. |
-| -o | Sort output ascending or descending. |
-| -e | Export results as JSON. |
-| -h | Show help message. |
+| `-u` | Total time per email address / user. |
+| `-i` | Total time per issue. |
+| `-a` | Show detailed breakdown. Used with -u or -i. |
+| `-s` | Sort output alphabetically or by total time. |
+| `-o` | Sort output ascending or descending. |
+| `-f` | Specify date from which should be counted. |
+| `-t` | Specify date up to which to should be counted. |
+| `-b` | Specify branch which to analyze. |
+| `-e` | Export results as JSON. |
+| `-h` | Show help message. |
 
 | Flag | Options | Default |
 | - | - | - |
-| -s | alpha, time | time |
-| -o | asc, desc | desc |
+| `-s` | alpha, time | time |
+| `-o` | asc, desc | desc |
+| `-b` | - | main |
 
-Also a pre-compiled executable for easier usage can be used. To download the right one for your OS check out the [newest release](https://github.com/bitsneak/htlle-da-vorlage/releases/latest).
+#### Examples
 
-#### Examples python
-
-- `git log | python time-calculator.py -u`
-- `git log | python time-calculator.py -i -a`
-- `git log | python time-calculator.py -u -s time`
-- `git log | python time-calculator.py -i -o desc`
-- `git log | python time-calculator.py -u -e`
-- `git log | python time-calculator.py -i -e > output.json`
-
-#### Examples executables
-
-Windows:
-
-```sh
-git log | .\time-calculator-windows.exe -u
-```
-
-MacOS:
-
-```sh
-git log | ./time-calculator -u
-```
-
-Linux:
-
-```sh
-tar -xvzf time-calculator-linux.tar.gz
-git log | ./time-calculator -u
-```
+- `python time-calculator.py -u`
+- `python time-calculator.py -i -a`
+- `python time-calculator.py -u -s time`
+- `python time-calculator.py -i -o desc`
+- `python time-calculator.py -u -f 1900-01-01`
+- `python time-calculator.py -i -t 1900-01-01`
+- `python time-calculator.py -u -b main`
+- `python time-calculator.py -u -e`
+- `python time-calculator.py -i -e > output.json`
 
 **Author:** Marko Schrempf
