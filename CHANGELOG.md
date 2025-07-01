@@ -1,3 +1,10 @@
+## 0.4.0 (2025-07-01)
+
+
+### Features
+
+* **time:** time calculator now also as github action aviable ([1b9fcc8](https://github.com/HTL-Leoben/da-base-template/commit/1b9fcc89f9d82d5ce1f3f0da0c9d198c49f8052a))
+
 ## 0.3.1 (2025-06-28)
 
 
