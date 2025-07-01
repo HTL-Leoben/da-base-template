@@ -26,7 +26,7 @@ The [workflow triggers](https://docs.github.com/en/actions/writing-workflows/cho
 
 ## GitHub repository
 
-Create a folder `.github/workflows` in the root of your repository. You can now paste `notification-discord.yml` into the newly created folder. It is recommended to rename the chosen GitHub Action variant to `discord.yml`.
+Create a folder `.github/workflows` in the root of your repository. Now paste `notification-discord.yml` into the newly created folder. It is recommended to rename the GitHub Action to `discord.yml`.
 
 ## Discord
 

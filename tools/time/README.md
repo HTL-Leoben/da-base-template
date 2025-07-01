@@ -58,4 +58,8 @@ The script supports different flags to search and filter where `-u` and `-i` are
 - `python time-calculator.py -u -e`
 - `python time-calculator.py -i -e > output.json`
 
+### GitHub
+
+The Python script can also be run via GitHub. Create a folder `.github/workflows` in the root of your repository. Now paste `time-calculator.yml` into the newly created folder. It is recommended to rename the GitHub Action to `time.yml`. This GitHub Action does not trigger automatically, so when needed trigger it manually with the [workflow dispatch](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch) event. The time report is then saved as an [artifact](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow#about-workflow-artifacts) in the latest **successful** workflow run.
+
 **Author:** Marko Schrempf
