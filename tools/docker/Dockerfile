@@ -1,5 +1,5 @@
 # Author: Marko Schrempf, Günther Hutter
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 
 # Set the environment variables
 ENV LANG=C.UTF-8 \
