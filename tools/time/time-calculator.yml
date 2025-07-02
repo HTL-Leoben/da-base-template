@@ -1,5 +1,5 @@
 # Author: Marko Schrempf
-name: Git Time Calculator
+name: Git time calculator
 
 on:
   workflow_dispatch:

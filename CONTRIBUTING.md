@@ -48,7 +48,7 @@ If possible [reference the issue](https://docs.github.com/en/get-started/writing
 Commit messages from certain types automatically trigger new releases when pushed to the main branch.
 
 - Patch → `fix[optional scope]: <description>`
-- Minor → `feat[optional scope]: <description>`
+- Minor → `feat[optional scope]: <description>` and `perf[optional scope]: <description>`
 - Major → `<type>[optional scope]!: <description>`
 - Major → `BREAKING CHANGE: <description>` in footer
 
