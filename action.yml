@@ -83,11 +83,20 @@ runs:
       shell: bash
       run: docker run -v ${{ github.workspace }}/${{ inputs.thesis-path }}:/workspace ${{ inputs.dockerhub-username }}/${{ inputs.dockerhub-repository }}
 
+    - name: Get UTC Date
+      id: date
+      shell: bash
+      run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+    - name: Rename PDF With Date
+      shell: bash
+      run: mv ${{ inputs.thesis-path }}/diplomarbeit.pdf ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.date.outputs.date }}.pdf
+
     - name: Upload Diploma Thesis
       uses: actions/upload-artifact@v4
       with:
-        name: diploma-thesis
-        path: ${{ inputs.thesis-path }}/diplomarbeit.pdf
+        name: diplomarbeit-${{ steps.date.outputs.date }}
+        path: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.date.outputs.date }}.pdf
 
     - name: Extract Commit Message
       if: ${{ inputs.mail-address != '' && inputs.mail-address-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.teams-mail != '' && inputs.mail-body == '' }}
@@ -106,4 +115,4 @@ runs:
         from: ${{ inputs.mail-address }}
         subject: "Diploma thesis"
         body: ${{ inputs.mail-body || env.COMMIT_MESSAGE }}
-        attachments: ${{ inputs.thesis-path }}/diplomarbeit.pdf
+        attachments: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.date.outputs.date }}.pdf
