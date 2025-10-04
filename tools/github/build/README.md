@@ -107,4 +107,4 @@ After creating the secrets it should look like this:
 - If you use Gmail as a sending email address, you have to generate an [app password](https://support.google.com/accounts/answer/185833) and use this instead of your normal password.
 - You can only then see the teams channel email, if the creater of the team already viewed it once before.
 
-**Author:** Marko Schrempf
+**Author:** [Marko Schrempf](https://github.com/bitsneak)

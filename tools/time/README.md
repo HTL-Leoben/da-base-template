@@ -1,6 +1,6 @@
 # Git time calculator
 
-The Python script `time-calculator.py` allows the user to generate a report of the amount of time that was spend per user on the diploma thesis. It functions as time recording system.
+The Python script `time-reporter.py` allows the user to generate a report of the amount of time that was spend per user on the diploma thesis. It functions as time recording system.
 
 ## Usage
 
@@ -37,7 +37,9 @@ The script supports different flags to search and filter where `-u` and `-i` are
 | `-f` | Specify date from which should be counted. |
 | `-t` | Specify date up to which to should be counted. |
 | `-b` | Specify branch which to analyze. |
-| `-e` | Export results as JSON. |
+| `-e` | Export results as JSON to stdout. |
+| `-ef` | Export results as JSON to a file. If a directory or filename is provided the file is saved there. |
+| `-p` | Specify the path to a git repository. |
 | `-h` | Show help message. |
 
 | Flag | Options | Default |
@@ -45,21 +47,29 @@ The script supports different flags to search and filter where `-u` and `-i` are
 | `-s` | alpha, time | time |
 | `-o` | asc, desc | desc |
 | `-b` | - | main |
+| `-ef` | - | `user-report-{YYYY-MM-DDTHH-mmZ}.json` for `-u` <br> `issue-report-{YYYY-MM-DDTHH-mmZ}.json` for `-i` |
 
 #### Examples
 
-- `python time-calculator.py -u`
-- `python time-calculator.py -i -a`
-- `python time-calculator.py -u -s time`
-- `python time-calculator.py -i -o desc`
-- `python time-calculator.py -u -f 1900-01-01`
-- `python time-calculator.py -i -t 1900-01-01`
-- `python time-calculator.py -u -b main`
-- `python time-calculator.py -u -e`
-- `python time-calculator.py -i -e > output.json`
+- `python time-reporter.py -u`
+- `python time-reporter.py -i -a`
+- `python time-reporter.py -u -s time`
+- `python time-reporter.py -i -o desc`
+- `python time-reporter.py -u -f 1900-01-01`
+- `python time-reporter.py -i -t 1900-01-01`
+- `python time-reporter.py -u -b main`
+- `python time-reporter.py -i -e`
+- `python time-reporter.py -u -ef`
+- `python time-reporter.py -i -ef="report.json"`
+- `python time-reporter.py -u -ef=".\reports\"`
+- `python time-reporter.py -i -p=".\repository\"`
+
+### Executables
+
+The Python script can also be run without Python installed using the provided executables for your operating system in the suitable zip file provided in the [latest release](https://github.com/HTL-Leoben/da-base-template/releases/latest).
 
 ### GitHub
 
-The Python script can also be run via GitHub. Create a folder `.github/workflows` in the root of your repository. Now paste `time-calculator.yml` into the newly created folder. It is recommended to rename the GitHub Action to `time.yml`. This GitHub Action does not trigger automatically, so when needed trigger it manually with the [workflow dispatch](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch) event. The time report is then saved as an [artifact](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow#about-workflow-artifacts) in the latest **successful** workflow run.
+The Python script can also be run as a GitHub Action. Create a folder `.github/workflows` in the root of your repository. Now paste `time-reporter.yml` into the newly created folder. It is recommended to rename the GitHub Action to `time.yml`. This GitHub Action does not trigger automatically, so when needed trigger it manually with the [workflow dispatch](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch) event. The time report is then saved as an [artifact](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow#about-workflow-artifacts) in the latest **successful** workflow run.
 
-**Author:** Marko Schrempf
+**Author:** [Marko Schrempf](https://github.com/bitsneak)

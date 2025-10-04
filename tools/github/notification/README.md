@@ -46,4 +46,4 @@ After creating the secret it should look like this:
 
 ![Github Action secret overview](img/github-action-secret-overview.png)
 
-**Author:** Marko Schrempf
+[Marko Schrempf](https://github.com/bitsneak)

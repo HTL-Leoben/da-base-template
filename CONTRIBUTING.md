@@ -15,7 +15,7 @@ Thank you for your interest in contributing to **da-base-template**! We apprecia
 
 ### Issues
 
-- Before opening a new issue, please check if it already exists in the [issue tracker](https://github.com/bitsneak/HTLLE-DA-Vorlage/issues).
+- Before opening a new issue, please check if it already exists in the [issue tracker](https://github.com/HTL-Leoben/da-base-template/issues).
 - Provide as much detail as possible and use the issue templates.
 
 ### Pull Requests
@@ -65,3 +65,5 @@ Commit messages from certain types automatically trigger new releases when pushe
 ---
 
 Thank you for your contributions!
+
+**Author:** [Marko Schrempf](https://github.com/bitsneak)

@@ -20,4 +20,4 @@ There is also a way to [integrate](https://github.com/integrations/ghae-jira) Gi
 
 The provided Python script allows one to calculate the amount of time that was spend per user on the diploma thesis.
 
-**Author:** Marko Schrempf
+**Author:** [Marko Schrempf](https://github.com/bitsneak)
