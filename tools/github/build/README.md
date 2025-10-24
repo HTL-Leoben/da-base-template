@@ -1,6 +1,6 @@
 # Build and send diploma thesis
 
-The workflow `Build and send diploma thesis` allows the user to build the diploma thesis via a GitHub workflow and send it to a Microsoft Teams channel. The built diploma thesis can also be downloaded as a [GitHub Action workflow artifact](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/downloading-workflow-artifacts).
+The workflow `Build and send diploma thesis` allows the user to build the diploma thesis via a GitHub workflow and send it somwhere (e.g. to a Microsoft Teams channel). The built diploma thesis can also be downloaded as a [GitHub Action workflow artifact](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/downloading-workflow-artifacts).
 
 ## Microsoft Teams
 
@@ -32,12 +32,12 @@ This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
 | Name | Required | Description | Default |
 | - | - | - | - |
-| mail-address | `false` | Your email address from which the diploma thesis should be sent from. See [notes](#notes). <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
-| mail-address-password | `false` | The password for your email address. See [notes](#notes). <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
-| smtp-server | `false` | The SMTP server URL corresponding to your email address. <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
-| smtp-port | `false` | The SMTP port corresponding to your SMTP server. <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
-| teams-mail | `false` | The teams channel email address from the channel the diploma thesis should be sent to. <br> Required if the diploma thesis should be sent to Microsoft Teams. | - |
-| mail-body | `false` | Change the email body and therefore the message in teams. | [`git log -1 --pretty=%B`](https://git-scm.com/docs/git-log) |
+| mail | `false` | The email address from which the diploma thesis should be sent from. See [notes](#notes). <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
+| mail-password | `false` | The password for your email address. See [notes](#notes). <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
+| smtp-server | `false` | The SMTP server URL corresponding to your email address. <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
+| smtp-port | `false` | The SMTP port corresponding to your SMTP server. <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
+| receiving-mail | `false` | Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). <br> If the desired recipient is a Microsoft Teams channel, use its channel email address. | - |
+| mail-body | `false` | Change the email body (e.g. the message in Microsoft Teams). | [`git log -1 --pretty=%B`](https://git-scm.com/docs/git-log) |
 | thesis-path | `false` | Change the folder name where the template is located. | Diplomarbeit |
 | dockerhub-username | `false` | Change the Docker Hub username from which the Docker image gets provided. | bytebang |
 | dockerhub-repository | `false` | Change the Docker Hub repository name from which the Docker image gets provided. | htlle-da-env |
@@ -47,24 +47,24 @@ This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
 This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
-Minimal with only build:
+Only build:
 
 ```yml
 - name: Build And Send Diploma Thesis
   uses: HTL-Leoben/da-base-template@main
 ```
 
-Minimal with build and send:
+Build and send:
 
 ```yml
 - name: Build And Send Diploma Thesis
   uses: HTL-Leoben/da-base-template@main
   with:
-    mail-address: ${{ secrets.MAIL }}
-    mail-address-password: ${{ secrets.MAIL_PASSWORD }}
+    mail: ${{ secrets.SENDING_MAIL }}
+    mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
     smtp-server: ${{ secrets.SMTP_SERVER }}
     smtp-port: ${{ secrets.SMTP_PORT }}
-    teams-mail: ${{ secrets.TEAMS_MAIL }}
+    receiving-mail: ${{ secrets.RECEIVING_MAIL }}
 ```
 
 Override everything:
@@ -73,11 +73,11 @@ Override everything:
 - name: Build And Send Diploma Thesis
   uses: HTL-Leoben/da-base-template@main
   with:
-    mail-address: ${{ secrets.MAIL }}
-    mail-address-password: ${{ secrets.MAIL_PASSWORD }}
+    mail: ${{ secrets.SENDING_MAIL }}
+    mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
     smtp-server: ${{ secrets.SMTP_SERVER }}
     smtp-port: ${{ secrets.SMTP_PORT }}
-    teams-mail: ${{ secrets.TEAMS_MAIL }}
+    receiving-mail: ${{ secrets.RECEIVING_MAIL }}
     mail-body: git log -1 --pretty=%B
     thesis-path: Diplomarbeit
     dockerhub-username: bytebang
@@ -91,20 +91,20 @@ In your GitHub repository you need to [create the secrets](https://docs.github.c
 
 | Name | Usage |
 | - | - |
-| MAIL | Your email address from which the diploma thesis should be sent from.  |
-| MAIL_PASSWORD | The password for MAIL. |
-| SMTP_SERVER | The SMTP Server for your email address defined in MAIL. |
+| SENDING_MAIL | The email address from which the diploma thesis should be sent from.  |
+| SENDING_MAIL_PASSWORD | The password for the email address corresponding to SENDING_MAIL. |
+| SMTP_SERVER | The SMTP server for the email address defined in SENDING_MAIL. |
 | SMTP_PORT | The SMTP port corresponding to SMTP_SERVER. |
-| TEAMS_MAIL | The teams channel email from the channel the diploma thesis should be sent to. |
+| RECEIVING_MAIL | The recipient’s email address. If the desired recipient is a Microsoft Teams channel, use its channel email address. |
 
 After creating the secrets it should look like this:
 
-![Github action secret overview](img/github-action-secret-overview.png)
+![GitHub build Action secret overview](img/github-build-action-secret-overview.png)
 
 ## Notes
 
 - Sending the diploma thesis and thus automated emails using a school email address (Microsoft 365) is not supported. Therefore, use an email address, that does not correspond to your school email address.
 - If you use Gmail as a sending email address, you have to generate an [app password](https://support.google.com/accounts/answer/185833) and use this instead of your normal password.
-- You can only then see the teams channel email, if the creater of the team already viewed it once before.
+- You can only then see the Microsoft Teams channel email address, if the creator of the team already viewed it once before.
 
 **Author:** [Marko Schrempf](https://github.com/bitsneak)

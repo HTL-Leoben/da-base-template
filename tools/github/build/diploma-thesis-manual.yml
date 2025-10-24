@@ -10,8 +10,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-upload:
+  build:
     runs-on: ubuntu-22.04
+    outputs:
+      timestamp: ${{ steps.timestamp.outputs.datetime }}
 
     steps:
       - name: Checkout Repository
@@ -20,43 +22,53 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends git build-essential make-guile texlive-full pandoc pandoc-citeproc tree rsync hunspell hunspell-de-at hunspell-en-us
+          sudo apt-get install -y --no-install-recommends build-essential make-guile texlive-full pandoc pandoc-citeproc tree rsync
           
       - name: Build Diploma Thesis
         run: |
           cd Diplomarbeit
           make pdf -C da-base-template SOURCEDIR=$(pwd)
 
+      - name: Get UTC Timestamp
+        id: timestamp
+        run: echo "datetime=$(date -u +'%Y-%m-%dT%H-%MZ')" >> $GITHUB_OUTPUT
+
+      - name: Rename PDF With Timestamp
+        run: mv Diplomarbeit/diplomarbeit.pdf diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
+
       - name: Upload Diploma Thesis
         uses: actions/upload-artifact@v4
         with:
-          name: diploma-thesis
-          path: Diplomarbeit/diplomarbeit.pdf
+          name: diplomarbeit-${{ steps.timestamp.outputs.datetime }}
+          path: diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
 
   send:
-      needs: build-upload
+      needs: build
       if: success()
       runs-on: ubuntu-latest
 
       steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+
         - name: Download Diploma Thesis
           uses: actions/download-artifact@v4
           with:
-            name: diploma-thesis
+            name: diplomarbeit-${{ needs.build.outputs.timestamp }}
 
         - name: Extract Commit Message
-          id: get_commit_message
-          run: echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+          id: message
+          run: echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
 
         - name: Send Diploma Thesis
           uses: dawidd6/action-send-mail@v5
           with:
-            username: ${{ secrets.MAIL }}
-            password: ${{ secrets.MAIL_PASSWORD }}
+            username: ${{ secrets.SENDING_MAIL }}
+            password: ${{ secrets.SENDING_MAIL_PASSWORD }}
             server_address: ${{ secrets.SMTP_SERVER }}
             server_port: ${{ secrets.SMTP_PORT }}
-            to: ${{ secrets.TEAMS_MAIL }}
-            from: ${{ secrets.MAIL }}
-            subject: "Diploma thesis"
-            body: ${{ env.commit_message }}
-            attachments: diplomarbeit.pdf
+            to: ${{ secrets.RECEIVING_MAIL }}
+            from: ${{ secrets.SENDING_MAIL }}
+            subject: "Diplomarbeit"
+            body: ${{ steps.message.outputs.commit_message }}
+            attachments: diplomarbeit-${{ needs.build.outputs.timestamp }}.pdf

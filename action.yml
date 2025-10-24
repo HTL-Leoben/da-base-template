@@ -1,15 +1,15 @@
 name: Build and send diploma thesis
 description: GitHub action to build and send a diploma thesis using the corresponding Docker image from the school HTL Leoben
-author: bitsneak
+author: Marko Schrempf
 branding:
   icon: book
   color: orange
 
 inputs:
-  mail-address:
+  mail:
     description: The sending email address
     required: false
-  mail-address-password:
+  mail-password:
     description: The password for the sending email address
     required: false
   smtp-server:
@@ -18,8 +18,8 @@ inputs:
   smtp-port:
     description: The SMTP server port of the sending email
     required: false
-  teams-mail:
-    description: The email address of the teams channel the diploma thesis is sent to
+  receiving-mail:
+    description: The email address of the receiving mail address (e.g. Microsoft Teams channel) the diploma thesis is sent to
     required: false
   mail-body:
     description: The body to sent with the email. If not set it will default to the commit message
@@ -83,36 +83,37 @@ runs:
       shell: bash
       run: docker run -v ${{ github.workspace }}/${{ inputs.thesis-path }}:/workspace ${{ inputs.dockerhub-username }}/${{ inputs.dockerhub-repository }}
 
-    - name: Get UTC Date
-      id: date
+    - name: Get UTC Timestamp
+      id: timestamp
       shell: bash
-      run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      run: echo "datetime=$(date -u +'%Y-%m-%dT%H-%MZ')" >> $GITHUB_OUTPUT
 
-    - name: Rename PDF With Date
+    - name: Rename PDF With Timestamp
       shell: bash
-      run: mv ${{ inputs.thesis-path }}/diplomarbeit.pdf ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.date.outputs.date }}.pdf
+      run: mv ${{ inputs.thesis-path }}/diplomarbeit.pdf ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
 
     - name: Upload Diploma Thesis
       uses: actions/upload-artifact@v4
       with:
-        name: diplomarbeit-${{ steps.date.outputs.date }}
-        path: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.date.outputs.date }}.pdf
+        name: diplomarbeit-${{ steps.timestamp.outputs.datetime }}
+        path: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
 
     - name: Extract Commit Message
-      if: ${{ inputs.mail-address != '' && inputs.mail-address-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.teams-mail != '' && inputs.mail-body == '' }}
+      if: ${{ inputs.mail != '' && inputs.mail-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.receiving-mail != '' && inputs.mail-body == '' }}
+      id: message
       shell: bash
-      run: echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV   
+      run: echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
 
     - name: Send Diploma Thesis
-      if: ${{ inputs.mail-address != '' && inputs.mail-address-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.teams-mail != '' }}
+      if: ${{ inputs.mail != '' && inputs.mail-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.receiving-mail != '' }}
       uses: dawidd6/action-send-mail@v5
       with:
-        username: ${{ inputs.mail-address }}
-        password: ${{ inputs.mail-address-password }}
+        username: ${{ inputs.mail }}
+        password: ${{ inputs.mail-password }}
         server_address: ${{ inputs.smtp-server }}
         server_port: ${{ inputs.smtp-port }}
-        to: ${{ inputs.teams-mail }}
-        from: ${{ inputs.mail-address }}
-        subject: "Diploma thesis"
-        body: ${{ inputs.mail-body || env.COMMIT_MESSAGE }}
-        attachments: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.date.outputs.date }}.pdf
+        to: ${{ inputs.receiving-mail }}
+        from: ${{ inputs.mail }}
+        subject: "Diplomarbeit"
+        body: ${{ inputs.mail-body || steps.message.outputs.commit_message }}
+        attachments: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf

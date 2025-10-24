@@ -17,7 +17,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Get UTC Date
+    - name: Get UTC Timestamp
       id: timestamp
       run: echo "datetime=$(date -u +'%Y-%m-%dT%H-%MZ')" >> $GITHUB_OUTPUT
 
