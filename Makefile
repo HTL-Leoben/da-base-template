@@ -69,7 +69,7 @@ compile-output:
 	-o "$(OUTPUTFILE)" \
 	--template="$(STAGINGDIR)/style/template.tex" \
     --bibliography="$(BIBFILE)" 2>"$(LOGFILE)" \
-	--csl="$(STAGINGDIR)/style/htlle-diplomarbeit.csl" \
+	--citeproc \
 	--highlight-style=pygments \
 	--listings \
 	--metadata link-citations=true \

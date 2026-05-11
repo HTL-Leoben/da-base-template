@@ -1,6 +1,6 @@
 /*.pdf
+/*.tex
 /*.log
-/spellcheck-results.txt
-/diplomarbeit.pdf.tex
-/staging
 *.DS_Store
+/spellcheck-results.txt
+/staging

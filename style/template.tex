@@ -54,6 +54,7 @@
 % verhindert, dass Chapter / Section / Subsection / Subsubsection im Inhaltsverzeichnis so extrem eingerückt werden
 %
 \makeatletter
+\providecommand{\bprot@dottedtocline}{\@dottedtocline}
 \renewcommand*\l@chapter{\bprot@dottedtocline{0}{0em}{2em}}
 \renewcommand*\l@section{\bprot@dottedtocline{1}{0em}{3em}}
 \renewcommand*\l@subsection{\bprot@dottedtocline{2}{0em}{4em}}
@@ -443,10 +444,25 @@ $endif$
 $if(csl-refs)$
 \newlength{\cslhangindent}
 \setlength{\cslhangindent}{1.5em}
-\newenvironment{cslreferences}%
-  {$if(csl-hanging-indent)$\setlength{\parindent}{0pt}%
-  \everypar{\setlength{\hangindent}{\cslhangindent}}\ignorespaces$endif$}%
-  {\par}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit}
+\setlength{\cslentryspacingunit}{\parskip}
+\usepackage{calc}
+
+% Compatibility with modern pandoc citeproc output
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry spacing
+  {\setlength{\parindent}{0pt}%
+   \ifodd #1
+     \let\oldpar\par
+     \def\par{\hangindent=\cslhangindent\oldpar}
+   \fi
+   \setlength{\parskip}{#2\cslentryspacingunit}}
+  {}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth-\csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 $endif$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -679,4 +695,3 @@ $endfor$
 $endif$
 
 \end{document}
-
