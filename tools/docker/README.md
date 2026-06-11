@@ -22,34 +22,48 @@ Alternatively, the image can be pulled from the [Docker Hub](https://hub.docker.
 
 ### Targets
 
-One cannot just build the diploma thesis with the Docker image (***pdf***), but also use [**environment variables**](#environment-variables) or [**command line arguments**](#command-line-arguments) to make a spellcheck over your files (***spellcheck***), print out the compiled raw LaTeX file for debugging (***tex***) or manually delete the staging directory if something went wrong and it was not deleted automatically (***clean***).
+One cannot just build the diploma thesis with the Docker image (***pdf***), but also use [**environment variables**](#environment-variables) or [**command line arguments**](#command-line-arguments) to make a spellcheck over your files (***spellcheck***), print out the compiled raw LaTeX file for debugging (***tex***) or manually delete the staging (***clean-stage***), output (***clean-out***) or both (***clean-all***) directories if something went wrong and they were not deleted automatically.
 
-The accepted inputs / build targets, with default set to pdf, are:
+The accepted inputs / build targets, with default set to **pdf**, are:
 
 - pdf
 - spellcheck
 - tex
-- clean
+- clean-stage
+- clean-out
+- clean-all
 
 ### Environment variables
 
-The container provides a set of environment variables which can be used to manipulate the build process.
+The container provides a set of environment variables which can be used to manipulate the build process. Any interaction, script, or CLI flag automatically sets the corresponding environment variable in the background.
 
-- TARGETS
+- **TARGETS**
   - One or a comma seperated list of targets which are to be executed.
   - Targets are executed in the same order they are given.
   - Avaible targets are the same and named as [specified](#targets).
   - Defaults to: **pdf**
-- TEMPLATE
+- **TEMPLATE**
   - Sets the name of the folder in which the template files reside.
   - Defaults to: **da-base-template**
-- SOURCE_DIR
+- **SOURCE_DIR**
   - Sets the directory in which the diploma thesis and therefore the files used to build it lie.
   - Defaults to: **/workspace**
+- **OUTPUT_DIR**
+  - Sets the directory into which the files produced by the selected target are placed.
+  - Defaults to: **SOURCE_DIR/out**
+- **STAGING_DIR**
+  - Sets the directory into which the temporary files required to build the selected target are placed.
+  - Defaults to: **staging**
 
 ### Command Line Arguments
 
-When starting the Docker container via the command line it is also supported to set certain environment variables via command line arguments. Here the first given argument translates exactly to the environment variable `TARGETS`, the second one to `TEMPLATE` and the third one to `SOURCE_DIR`.
+When starting the Docker container from the command line, the environment variables can also be specified as positional command line arguments. The arguments are mapped to environment variables in the following order:
+
+1. TARGETS
+2. TEMPLATE
+3. SOURCE_DIR
+4. OUTPUT_DIR
+5. STAGING_DIR
 
 ### Host CLI
 
@@ -77,24 +91,45 @@ or
 docker run -it --rm -v $(pwd):/workspace htlle-da-builder --targets=pdf
 ```
 
-This command runs the *htlle-da-builder* Docker container interactively, mounts the current directory into the container at `/workspace` and automatically cleans the container up after it exits. Errors and log messages are shown in the console. The output files will be written back to the `/workspace` folder.
+These command run the *htlle-da-builder* Docker container interactively, mount the current directory into the container at `/workspace` and automatically cleans the container up after it exits. Errors and log messages are shown in the console. The output files will be written back to the folder specified in the `OUTPUT_DIR` environment variable.
 
-When using environment variables the syntax which is used to set them inside of the Docker container is `-e VARIABLE=VALUE`. Following is an example specifying everything manually and also executing every possible target.
+When using environment variables the syntax which is used to set them inside of the Docker container is `-e VARIABLE=VALUE`. Following is an example specifying everything manually.
 
 ```sh
-docker run -it --rm -v $(pwd):/workspace -e TARGETS=pdf,spellcheck,tex,clean -e TEMPLATE=da-base-template -e SOURCE_DIR=/workspace htlle-da-builder
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  -e TARGETS=pdf \
+  -e TEMPLATE=da-base-template \
+  -e SOURCE_DIR=/workspace \
+  -e OUTPUT_DIR=/workspace/out \
+  -e STAGING_DIR=staging \
+  htll-da-builder
 ```
 
-When using command line arguments the parameters are appended at the end of the command. They can either be presented as raw arguments or in a cleaner flag version. Following is an example specifying everything manually and also executing every possible target with raw arguments.
+When using command line arguments the parameters are appended at the end of the command. They can either be presented as raw arguments or in a cleaner flag version. Following is an example specifying everything manually with raw arguments.
 
 ```sh
-docker run -it --rm -v $(pwd):/workspace htlle-da-builder pdf,spellcheck,tex,clean da-base-template /workspace
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  htll-da-builder \
+  pdf \
+  da-base-template \
+  /workspace \
+  /workspace/out \
+  staging
 ```
 
-Following is an example specifying everything manually and also executing every possible target with flag arguments.
+Following is an example specifying everything manually with flag arguments.
 
 ```sh
-docker run -it --rm -v $(pwd):/workspace htlle-da-builder --targets=pdf,spellcheck,tex,clean --template=da-base-template --source-dir=/workspace
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  htll-da-builder \
+  --targets=pdf \
+  --tmpl=da-base-template \
+  --src-dir=/workspace \
+  --out-dir=/workspace/out \
+  --stage-dir=staging
 ```
 
 ### Container CLI
@@ -105,19 +140,19 @@ The first option is provided in form of a command named after the target which i
 
 The second option is the `build` command. By just typing *build* the *pdf* target under default conditions gets executed. But it supports a lot more.
 
-- `build <targets> <template> <source_dir>`
-- `build --targets=<targets> --template=<template> --source-dir=<source_dir>`
+- `build <targets> <template> <source_dir> <output_dir> <staging_dir>`
+- `build --targets=<targets> --tmpl=<template> --src-dir=<source_dir> --out-dir=<output_dir> --stage-dir=<staging_dir>`
 
-Following is an example specifying everything manually and also executing every possible target with raw arguments.
+Following is an example specifying everything manually with raw arguments.
 
 ```sh
-build pdf,spellcheck,tex,clean da-base-template /workspace
+build pdf da-base-template /workspace /workspace/out staging
 ```
 
 Following is an example specifying everything manually and also executing every possible target with flag arguments.
 
 ```sh
-build --targets=pdf,spellcheck,tex,clean --template=da-base-template --source-dir=/workspace
+build --targets=pdf --tmpl=da-base-template --src-dir=/workspace --out-dir=/workspace/out --stage-dir=staging
 ```
 
 ### Docker Desktop

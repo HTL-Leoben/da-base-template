@@ -9,8 +9,12 @@ TEMPLATE="${TEMPLATE:-da-base-template}"
 # Use the env SOURCE_DIR to change the directory in the container where the files to build lie
 # Must be same as workdir in Dockerfile. Default: /workspace
 SOURCE_DIR="${SOURCE_DIR:-/workspace}"
+# Use the env OUTPUT_DIR to change the directory in the container where the built files lie: Default: SOURCE_DIR/out
+OUTPUT_DIR="${OUTPUT_DIR:-$SOURCE_DIR/out}"
+# Use the env STAGING_DIR to change the directory in the container where the staging files lie: Default: staging
+STAGING_DIR="${STAGING_DIR:-staging}"
 # Possible make targets
-ALLOWED_TARGETS=("pdf" "spellcheck" "tex" "clean")
+ALLOWED_TARGETS=("pdf" "spellcheck" "tex" "clean-stage" "clean-out" "clean-all")
 ALLOWED_TARGETS_STRING=$(IFS=', '; echo "${ALLOWED_TARGETS[*]}")
 
 # Check if SOURCE_DIR has the necessary files and folders
@@ -56,5 +60,5 @@ done
 # Execute targets only after they are validated
 for raw_target in "${REQUESTED_TARGETS[@]}"; do
     target="$(echo "$raw_target" | xargs)"
-    make -C "$TEMPLATE" "$target" SOURCEDIR="$SOURCE_DIR"
+    make -C "$TEMPLATE" "$target" SOURCEDIR="$SOURCE_DIR" OUTPUTDIR="$OUTPUT_DIR" STAGINGDIR="$STAGING_DIR"
 done

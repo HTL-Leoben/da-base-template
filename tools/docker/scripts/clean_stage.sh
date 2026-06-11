@@ -2,7 +2,7 @@
 # Author: Marko Schrempf
 set -euo pipefail
 
-TARGETS="spellcheck"
+TARGETS="clean-stage"
 # Use cmd arg or the env TEMPLATE to change the templates folder name. Default: da-base-template
 TEMPLATE="${1:-${TEMPLATE:-da-base-template}}"
 # Use cmd arg or the env SOURCE_DIR to change the source folder name. Default: /workspace

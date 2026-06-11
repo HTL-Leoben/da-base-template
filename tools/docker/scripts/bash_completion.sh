@@ -7,8 +7,8 @@ _build_completion() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    local targets="pdf spellcheck tex clean"
-    local flags="--targets= --template="
+    local targets="pdf spellcheck tex clean-stage clean-out clean-all"
+    local flags="--targets= --tmpl= --src-dir= --out-dir= --stage-dir="
 
     if [[ "$cur" == --targets=* ]]; then
         local value="${cur#--targets=}"
@@ -32,7 +32,7 @@ _build_completion() {
         return 0
     fi
 
-    if [[ "$prev" == "--template=" ]]; then
+    if [[ "$prev" == "--tmpl=" || "$prev" == "--src-dir=" || "$prev" == "--out-dir=" || "$prev" == "--stage-dir=" ]]; then
         COMPREPLY=()
         return 0
     fi
