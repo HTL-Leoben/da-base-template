@@ -1,0 +1,243 @@
+// Author: Marko Schrempf
+def TARGET_CONFIGS = [:]
+
+pipeline {
+    agent { label 'docker' }
+
+    options {
+        buildDiscarder(logRotator(
+            numToKeepStr: '10',
+            artifactNumToKeepStr: '10',
+            daysToKeepStr: '7',
+            artifactDaysToKeepStr: '7'
+        ))
+    }
+
+    parameters {
+        booleanParam(name: 'BUILD_PDF', defaultValue: true, description: 'Build PDF output')
+        booleanParam(name: 'BUILD_SPELLCHECK', defaultValue: false, description: 'Build spellcheck output')
+        booleanParam(name: 'BUILD_TEX', defaultValue: false, description: 'Build LaTeX output')
+        choice(name: 'ARCHIVE_FORMAT', choices: ['zip', 'tar.gz', '7z'], description: 'Archive type')
+        string(name: 'TEMPLATE', defaultValue: 'da-base-template', trim: true, description: 'Name of the folder in which the template files lie')
+        string(name: 'SOURCE_DIR', defaultValue: 'Diplomarbeit', trim: true, description: 'Name of the folder in the repository in which the diploma thesis lies')
+        string(name: 'RECEIVING_MAILS', trim: true, description: 'Comma seperated list of the receiving mail addresses to which the archive of the diploma thesis is sent to')
+        string(name: 'MAIL_BODY', trim: true, description: 'Body of the email sent to the receiving mail addresses')
+        booleanParam(name: 'SEND_UNCOMPRESSED', defaultValue: false, description: 'Send uncompressed files instead of an archive')
+        string(name: 'DOCKER_REGISTRY', defaultValue: 'docker.io', trim: true, description: 'URL of the Docker registry')
+        string(name: 'DOCKER_NAMESPACE', defaultValue: 'bytebang', trim: true, description: 'Name of the Docker namespace')
+        string(name: 'DOCKER_IMAGE',  defaultValue: 'htlle-da-builder', trim: true, description: 'Name of the Docker image')
+        string(name: 'DOCKER_TAG',  defaultValue: 'latest', trim: true, description: 'Name of the Docker tag')
+    }
+
+    stages {
+        stage('Setup Environment') {
+            steps {
+                cleanWs()
+                checkout scm
+                script {
+                    // Stop pipeline if no targets are selected
+                    if (!(params.BUILD_PDF || params.BUILD_SPELLCHECK || params.BUILD_TEX)) {
+                        error("No targets are selected")
+                    }
+                    def sanitizedJobName = env.JOB_NAME.toLowerCase().replaceAll('[^a-z0-9_.-]', '-').trim()
+                    
+                    // Check mail addresses for validity if present
+                    if (params.RECEIVING_MAILS) {
+                        def emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+                        def emails = params.RECEIVING_MAILS.split(',').collect { it.trim() }
+                        def invalid = emails.findAll { !(it ==~ emailRegex) }
+
+                        if (invalid) {
+                            error("Invalid email address(es): ${invalid.join(', ')}")
+                        }
+                    }
+
+                    // Build job
+                    env.BUILD_UUID = UUID.randomUUID().toString().take(8)
+                    env.BUILD_TIMESTAMP = new Date().format("yyyy-MM-dd'T'HH-mm'Z'", TimeZone.getTimeZone('UTC'))
+                    env.GIT_COMMIT_MESSAGE = sh(label: 'Latest version control message', script: "git log -1 --pretty=%B", returnStdout: true).trim()
+
+                    // Docker
+                    env.DOCKER_CONTAINER_BASE_NAME = "${sanitizedJobName}-${env.BUILD_NUMBER}-${env.BUILD_UUID}"
+                    env.DOCKER_FULL_IMAGE = "${params.DOCKER_REGISTRY}/${params.DOCKER_NAMESPACE}/${params.DOCKER_IMAGE}:${params.DOCKER_TAG}"
+                    env.DOCKER_SOURCE_DIR = '/workspace'
+                    env.DOCKER_STAGING_DIR = "${env.DOCKER_SOURCE_DIR}/${params.TEMPLATE}/${env.DOCKER_CONTAINER_BASE_NAME}"
+                    env.OUTPUT_BASE_DIR = "${env.DOCKER_CONTAINER_BASE_NAME}-output"
+                    env.DOCKER_OUTPUT_DIR = "${env.DOCKER_SOURCE_DIR}/${env.OUTPUT_BASE_DIR}"
+
+                    // Directories
+                    env.OUTPUT_DIR = "${params.SOURCE_DIR}/${env.OUTPUT_BASE_DIR}"
+                    env.ARCHIVE_NAME = "diplomarbeit-${env.BUILD_TIMESTAMP}.${params.ARCHIVE_FORMAT}"
+	                env.ARCHIVE_DIR = "${params.SOURCE_DIR}/${env.ARCHIVE_NAME}"
+
+                    // Build targets
+                    if (params.BUILD_PDF) {
+                        TARGET_CONFIGS["PDF"] = [
+                            stageName : "Build PDF",
+                            target : "pdf",
+                            outputFile : "diplomarbeit.pdf",
+                        ]
+                    }
+                    if (params.BUILD_SPELLCHECK) {
+                        TARGET_CONFIGS["Spellcheck"] = [
+                            stageName : "Build Spellcheck",
+                            target : "spellcheck",
+                            outputFile : "spellcheck-results.txt"
+                        ]
+                    }
+                    if (params.BUILD_TEX) {
+                        TARGET_CONFIGS["LaTeX"] = [
+                            stageName : "Build LaTeX",
+                            target : "tex",
+                            outputFile : "diplomarbeit.pdf.tex"
+                        ]
+                    }
+                }
+            }
+        }
+        stage('Pull Latest Image') {
+            steps {
+                sh(label: 'Pull Docker image', script: "docker pull ${env.DOCKER_FULL_IMAGE}")
+                sh(label: 'Prune Docker images', script: "docker image prune -f")
+            }
+        }
+        stage('Build Targets') {
+            steps {
+                script {
+                    def stages = [:]
+
+                    TARGET_CONFIGS.each { _, cfg ->
+                        stages[cfg.stageName] = {
+                            def containerName = "${env.DOCKER_CONTAINER_BASE_NAME}-${cfg.target}"
+
+                            sh(label: "Run container for target ${cfg.target}",
+                                script: """
+                                    docker run --rm \
+                                        -u \$(id -u):\$(id -g) \
+                                        --name '${containerName}' \
+                                        -v '${env.WORKSPACE}/${params.SOURCE_DIR}:${env.DOCKER_SOURCE_DIR}:rw' \
+                                        -e TARGETS='${cfg.target}' \
+                                        -e TEMPLATE='${params.TEMPLATE}' \
+                                        -e SOURCE_DIR='${env.DOCKER_SOURCE_DIR}' \
+                                        -e STAGING_DIR='${env.DOCKER_STAGING_DIR}-${cfg.target}' \
+                                        -e OUTPUT_DIR='${env.DOCKER_OUTPUT_DIR}' \
+                                        '${env.DOCKER_FULL_IMAGE}'
+                                """)
+
+                            def filePath = "${env.OUTPUT_DIR}/${cfg.outputFile}"
+                            if (!fileExists(filePath)) {
+                                error("Output file missing: ${cfg.outputFile}")
+                            }
+                        }
+                    }
+
+                    parallel stages
+                }
+            }
+        }
+        stage('Create Archive') {
+            steps {
+                dir(env.OUTPUT_DIR) {
+                    script {
+                        // Collect built targets for manifest
+                        def targets = TARGET_CONFIGS.collect { _, cfg ->
+                            [
+                                target : cfg.target,
+                                output : cfg.outputFile
+                            ]
+                        }
+
+                        // Create manifest structure
+                        def manifest = [
+                            job: [
+                                name: env.JOB_NAME,
+                                buildNumber: env.BUILD_NUMBER.toInteger(),
+                                timestamp: env.BUILD_TIMESTAMP,
+                                uuid: env.BUILD_UUID
+                            ],
+                            git: [
+                                repository: env.GIT_URL,
+                                branch: env.GIT_BRANCH,
+                                commit: [
+                                    hash: env.GIT_COMMIT,
+                                    message: env.GIT_COMMIT_MESSAGE
+                                ]
+                            ],
+                            docker: [
+                                registry: params.DOCKER_REGISTRY,
+                                namespace: params.DOCKER_NAMESPACE,
+                                image: params.DOCKER_IMAGE,
+                                tag: params.DOCKER_TAG
+                            ],
+                            build: [
+                                template: params.TEMPLATE,
+                                repoSourceDir: params.SOURCE_DIR,
+                                containerSourceDir: env.DOCKER_SOURCE_DIR,
+                                archiveFormat: params.ARCHIVE_FORMAT
+                            ],
+                            targets: targets
+                        ]
+
+                        // Write manifest
+                        writeJSON(file: "manifest.json", json: manifest, pretty: 2)
+
+                        // Create archive
+                        def archiveFile = "../${env.ARCHIVE_DIR.tokenize('/')[-1]}"
+                        def archiveCommands = [
+                            'zip' : "zip -q -9 -r \"${archiveFile}\" . -x \"*.log\"",
+                            'tar.gz' : "tar --exclude=\"*.log\" -cf - . | gzip -9 > \"${archiveFile}\"",
+                            '7z' : "7z a -t7z \"${archiveFile}\" . -m0=lzma2 -mx=9 -mfb=273 -md=1024m -ms=on -xr!\"*.log\""
+                        ]
+
+                        if (!archiveCommands.containsKey(params.ARCHIVE_FORMAT)) {
+                            error("Unsupported archive format: ${params.ARCHIVE_FORMAT}")
+                        }
+                        sh(label: "Create ${params.ARCHIVE_FORMAT} archive", script: archiveCommands[params.ARCHIVE_FORMAT])
+
+                        if (!fileExists("../${env.ARCHIVE_NAME}")) {
+                            error("Archive file missing: ${env.ARCHIVE_NAME}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                if (params.RECEIVING_MAILS) {
+                    def attachmentsPattern = ""
+
+                    if (params.SEND_UNCOMPRESSED) {
+                        def targets = ["${env.OUTPUT_DIR}/manifest.json"] + TARGET_CONFIGS.values().collect { "${env.OUTPUT_DIR}/${it.outputFile}" }
+
+                        def attachments = targets.collect { path ->
+                            def index = path.lastIndexOf('.')
+                            def targetPath = (index != -1) ? 
+                                "${path[0..<index]}-${env.BUILD_TIMESTAMP}${path[index..-1]}" : 
+                                "${path}-${env.BUILD_TIMESTAMP}"
+
+                            sh(label: "Rename ${path.tokenize('/')[-1]}", script: "mv '${path}' '${targetPath}'")
+                            return targetPath
+                        }
+
+                        attachmentsPattern = attachments.join(',')
+                    } else {
+                        attachmentsPattern = env.ARCHIVE_DIR
+                    }
+
+                    // Send email with attachments
+                    emailext(
+                        to: params.RECEIVING_MAILS,
+                        subject: "Diploma thesis",
+                        body: params.MAIL_BODY ?: env.GIT_COMMIT_MESSAGE,
+                        attachmentsPattern: attachmentsPattern
+                    )
+                }
+            }
+
+            // Store archive file on the Jenkins master
+            archiveArtifacts artifacts: "${env.ARCHIVE_DIR}", allowEmptyArchive: false, fingerprint: true
+        }
+    }
+}

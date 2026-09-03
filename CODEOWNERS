@@ -9,6 +9,7 @@ action.yml @bitsneak
 tools/docker/ @bitsneak @bytebang
 tools/github/ @bitsneak
 tools/time/ @bitsneak
+tools/jenkins/ @bitsneak
 
 # Docs
 CODEOWNERS @bitsneak
