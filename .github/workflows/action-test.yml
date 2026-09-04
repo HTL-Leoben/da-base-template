@@ -25,9 +25,9 @@ jobs:
         uses: HTL-Leoben/da-base-template@main
         with:
           manual-mode: ${{ github.workspace }}
-          mail-address: ${{ secrets.SENDING_MAIL }}
-          mail-address-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
+          mail: ${{ secrets.SENDING_MAIL }}
+          mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
           smtp-server: ${{ secrets.SMTP_SERVER }}
           smtp-port: ${{ secrets.SMTP_PORT }}
-          teams-mail: ${{ secrets.RECEIVING_MAIL }}
+          receiving-mails: ${{ secrets.RECEIVING_MAILS }}
           mail-body: The Action 'Build and send diploma thesis' was successfully tested

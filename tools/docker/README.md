@@ -16,7 +16,7 @@ docker build -t htlle-da-builder .
 
 This creates an image that contains all dependencies and expects to find your diploma thesis mounted into the `/workspace` folder.
 
-Alternatively, the image can be pulled from the [Docker Hub](https://hub.docker.com/r/bytebang/htlle-da-builder).
+Alternatively, the image can be pulled from the [Docker Hub](https://hub.docker.com/r/bytebang/htlle-da-builder) or [GitHub Container Registry](https://github.com/HTL-Leoben/da-base-template/packages).
 
 ## Usage
 

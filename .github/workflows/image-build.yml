@@ -16,11 +16,18 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
+      - name: Set Up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Build Docker Image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: tools/docker
+          platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
           push: false
           tags: ${{ secrets.DOCKERHUB_USERNAME }}:latest
