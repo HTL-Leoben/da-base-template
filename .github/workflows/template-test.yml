@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Clone Diploma Thesis Repository
         run: git clone https://github.com/HTL-Leoben/da-template
@@ -43,7 +43,7 @@ jobs:
         run: mv da-template/* .
 
       - name: Build Docker Image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: tools/docker
           push: false

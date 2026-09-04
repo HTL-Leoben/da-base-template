@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
       - name: Clone Diploma Thesis Repository
         run: git clone https://github.com/HTL-Leoben/da-template
 
@@ -22,12 +25,12 @@ jobs:
         run: mv da-template/* .
 
       - name: Build And Send Diploma Thesis
-        uses: HTL-Leoben/da-base-template@main
+        uses: ./
         with:
           manual-mode: ${{ github.workspace }}
-          mail-address: ${{ secrets.SENDING_MAIL }}
-          mail-address-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
+          mail: ${{ secrets.SENDING_MAIL }}
+          mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
           smtp-server: ${{ secrets.SMTP_SERVER }}
           smtp-port: ${{ secrets.SMTP_PORT }}
-          teams-mail: ${{ secrets.RECEIVING_MAIL }}
+          receiving-mails: ${{ secrets.RECEIVING_MAILS }}
           mail-body: The Action 'Build and send diploma thesis' was successfully tested

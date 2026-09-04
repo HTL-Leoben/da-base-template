@@ -44,6 +44,6 @@ In your GitHub repository you need to [create the secret](https://docs.github.co
 
 After creating the secret it should look like this:
 
-![Github Action secret overview](img/github-action-secret-overview.png)
+![GitHub notification Action secret overview](img/github-notification-action-secret-overview.png)
 
-[Marko Schrempf](https://github.com/bitsneak)
+**Author**: [Marko Schrempf](https://github.com/bitsneak)

@@ -12,13 +12,18 @@ on:
 jobs:
   build-send:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [pdf]
 
     steps:
       - name: Build And Send Diploma Thesis
         uses: HTL-Leoben/da-base-template@main
         with:
-          mail-address: ${{ secrets.MAIL }}
-          mail-address-password: ${{ secrets.MAIL_PASSWORD }}
+          target: ${{ matrix.target }}
+          mail: ${{ secrets.SENDING_MAIL }}
+          mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
           smtp-server: ${{ secrets.SMTP_SERVER }}
           smtp-port: ${{ secrets.SMTP_PORT }}
-          teams-mail: ${{ secrets.TEAMS_MAIL }}
+          receiving-mails: ${{ secrets.RECEIVING_MAILS }}
