@@ -12,23 +12,11 @@ The workflow `Build and send diploma thesis` allows the user to build the diplom
 
 ### Repository
 
-Create a folder `.github/workflows` in the root of your repository. You can now choose between `diploma-thesis-manual.yml`, `diploma-thesis-docker.yml` and `diploma-thesis-action.yml` to paste into the newly created folder. It is recommended to rename the chosen GitHub Action variant to `thesis.yml`.
+Create a folder `.github/workflows` in the root of your repository. You can now paste `thesis.yml` into the newly created folder. It uses the published GitHub Action provided by the [da-base-template](https://github.com/HTL-Leoben/da-base-template) repository and has an approximate runtime of 3 minutes. If one does not want to be dependent on the base repository, the `action.yml` of it can be copied into the root of the target repository. After that the **uses** section of the `thesis.yml` must be changed accordingly to reflect the changed path.
 
-- **-manual**
-  - installs all the dependencies in the Action itself
-  - runtime: ~10 minutes
-- **-docker**
-  - uses the Docker image
-  - runtime: ~3 minutes
-- **-action**
-  - uses the published GitHub Action provided by the [`da-base-template`](https://github.com/HTL-Leoben/da-base-template) repository
-  - runtime: ~3 minutes
-
-The variants `diploma-thesis-manual.yml` and `diploma-thesis-docker.yml` each contain a [job](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/using-jobs-in-a-workflow#overview) named `send`. This job can be deleted if the diploma thesis should only be built and not sent. Note, that the whole workflow will fail if the diploma thesis file size is too large when sending it, or if any input parameter is incorrect. Regarding the first case, a fix would be either to reduce the size of included images and PDFs or not use the send option. Regardless, the built diploma thesis is always saved as an [artifact](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow#about-workflow-artifacts) in the latest **successful** workflow run.
+Note, that the whole workflow will fail if the diploma thesis file size is too large when sending it, or if any input parameter is incorrect. Regarding the first case, a fix would be either to reduce the size of included images and PDFs or not use the send option. Regardless, the built diploma thesis is always saved as an [artifact](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow#about-workflow-artifacts) in the latest **successful** workflow run.
 
 ### Inputs
-
-This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
 | Name | Required | Description | Default |
 | - | - | - | - |
@@ -36,16 +24,19 @@ This section is only relevant if the file `diploma-thesis-action.yml` is used.
 | mail-password | `false` | The password for your email address. See [notes](#notes). <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
 | smtp-server | `false` | The SMTP server URL corresponding to your email address. <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
 | smtp-port | `false` | The SMTP port corresponding to your SMTP server. <br> Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). | - |
-| receiving-mail | `false` | Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). <br> If the desired recipient is a Microsoft Teams channel, use its channel email address. | - |
+| receiving-mails | `false` | Required if the diploma thesis should be sent somewhere (e.g. Microsoft Teams). <br> If the desired recipient is a Microsoft Teams channel, use its channel email address. <br> Supports a comma-seperated list of email addresses. | - |
 | mail-body | `false` | Change the email body (e.g. the message in Microsoft Teams). | [`git log -1 --pretty=%B`](https://git-scm.com/docs/git-log) |
+| target | `false` | The target used to build the diploma thesis. <br> It supports one target per run which is one out of pdf, spellcheck or tex. | pdf |
+| send-mail-on-target | `false` | Comma-separated list of targets that trigger an email notification. <br> It supports the same targets as in `target` and all. | pdf |
 | thesis-path | `false` | Change the folder name where the template is located. | Diplomarbeit |
-| dockerhub-username | `false` | Change the Docker Hub username from which the Docker image gets provided. | bytebang |
-| dockerhub-repository | `false` | Change the Docker Hub repository name from which the Docker image gets provided. | htlle-da-env |
+| output-dir | `false` | The name of the compilation output folder placed inside the `thesis-path`. | out |
+| docker-registry | `false` | Change the Docker registry from which the Docker image gets pulled. | docker.io |
+| docker-namespace | `false` | Change the Docker namespace from which the Docker image gets pulled. | bytebang |
+| docker-image | `false` | Change the Docker image name from which the Docker image gets pulled. | htlle-da-builder |
+| docker-tag | `false` | Change the Docker tag which the Docker image should use. | latest |
 | manual-mode | `false` | If the repository should not be checked out automatically, specify the complete workspace path to `thesis-path`. | [actions/checkout](https://github.com/actions/checkout) |
 
 ### Usage
-
-This section is only relevant if the file `diploma-thesis-action.yml` is used.
 
 Only build:
 
@@ -64,25 +55,36 @@ Build and send:
     mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
     smtp-server: ${{ secrets.SMTP_SERVER }}
     smtp-port: ${{ secrets.SMTP_PORT }}
-    receiving-mail: ${{ secrets.RECEIVING_MAIL }}
+    receiving-mails: ${{ secrets.RECEIVING_MAILS }}
 ```
 
-Override everything:
+When building multiple targets at the same time a [matrix](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations) is used to pass the different targets into a parallelized execution stage. Note, that those targets are the same as specified in the [inputs](#inputs):
 
 ```yml
-- name: Build And Send Diploma Thesis
-  uses: HTL-Leoben/da-base-template@main
-  with:
-    mail: ${{ secrets.SENDING_MAIL }}
-    mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
-    smtp-server: ${{ secrets.SMTP_SERVER }}
-    smtp-port: ${{ secrets.SMTP_PORT }}
-    receiving-mail: ${{ secrets.RECEIVING_MAIL }}
-    mail-body: git log -1 --pretty=%B
-    thesis-path: Diplomarbeit
-    dockerhub-username: bytebang
-    dockerhub-repository: htlle-da-env
-    manual-mode: ${{ github.workspace }}
+jobs:
+  build-send:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [pdf, spellcheck, tex]
+
+  steps:
+    - name: Build And Send Diploma Thesis
+      uses: HTL-Leoben/da-base-template@main
+      with:
+        target: ${{ matrix.target }}
+```
+
+Only build using an independent `action.yml`:
+
+```yml
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v7
+
+  - name: Build And Send Diploma Thesis
+    uses: ./
 ```
 
 ### Secrets
@@ -91,11 +93,11 @@ In your GitHub repository you need to [create the secrets](https://docs.github.c
 
 | Name | Usage |
 | - | - |
-| SENDING_MAIL | The email address from which the diploma thesis should be sent from.  |
-| SENDING_MAIL_PASSWORD | The password for the email address corresponding to SENDING_MAIL. |
-| SMTP_SERVER | The SMTP server for the email address defined in SENDING_MAIL. |
-| SMTP_PORT | The SMTP port corresponding to SMTP_SERVER. |
-| RECEIVING_MAIL | The recipient’s email address. If the desired recipient is a Microsoft Teams channel, use its channel email address. |
+| SENDING_MAIL | The email address from which the diploma thesis should be sent from. |
+| SENDING_MAIL_PASSWORD | The password for the email address corresponding to `SENDING_MAIL`. |
+| SMTP_SERVER | The SMTP server for the email address defined in `SENDING_MAIL`. |
+| SMTP_PORT | The SMTP port corresponding to `SMTP_SERVER`. |
+| RECEIVING_MAILS | The recipients email addresses. If the desired recipient is a Microsoft Teams channel, use its channel email address. |
 
 After creating the secrets it should look like this:
 

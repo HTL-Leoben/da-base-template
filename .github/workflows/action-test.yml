@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Clone Diploma Thesis Repository
         run: git clone https://github.com/HTL-Leoben/da-template
@@ -32,5 +32,5 @@ jobs:
           mail-password: ${{ secrets.SENDING_MAIL_PASSWORD }}
           smtp-server: ${{ secrets.SMTP_SERVER }}
           smtp-port: ${{ secrets.SMTP_PORT }}
-          receiving-mail: ${{ secrets.RECEIVING_MAIL }}
+          receiving-mails: ${{ secrets.RECEIVING_MAILS }}
           mail-body: The Action 'Build and send diploma thesis' was successfully tested

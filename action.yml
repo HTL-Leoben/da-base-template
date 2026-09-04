@@ -6,6 +6,14 @@ branding:
   color: orange
 
 inputs:
+  target:
+    description: The target used to build the diploma thesis. It supports one target per run which is one out of 'pdf', 'spellcheck' or 'tex'. Defaults to 'pdf'
+    default: pdf
+    required: false
+  send-mail-on-target:
+    description: Comma-separated list of targets that trigger an email notification. It supports the same targets as in target and 'all'. Defaults to 'pdf'.
+    default: pdf
+    required: false
   mail:
     description: The sending email address
     required: false
@@ -18,36 +26,57 @@ inputs:
   smtp-port:
     description: The SMTP server port of the sending email
     required: false
-  receiving-mail:
-    description: The email address of the receiving mail address (e.g. Microsoft Teams channel) the diploma thesis is sent to
+  receiving-mails:
+    description: Comma-separated list of receiving mail addresses (e.g. Microsoft Teams channel) the diploma thesis is sent to
     required: false
   mail-body:
     description: The body to sent with the email. If not set it will default to the commit message
     required: false
 
   thesis-path:
-    description: The path from the repository root to the filled out diploma thesis folder. If not set it will default to 'Diplomarbeit'
+    description: The path from the repository root to the filled out diploma thesis folder. Defaults to 'Diplomarbeit'
     default: Diplomarbeit
     required: false
-  dockerhub-username:
-    description: The DockerHub username for the image. If not set it will default to 'bytebang'
+  output-dir:
+    description: The name of the compilation output folder placed inside the thesis-path folder. Defaults to 'out'
+    default: out
+    required: false
+  docker-registry:
+    description: The Docker registry from which to pull the image. Defaults to 'docker.io'
+    default: docker.io
+    required: false
+  docker-namespace:
+    description: The Docker username for the image. Defaults to 'bytebang'
     default: bytebang
     required: false
-  dockerhub-repository:
-    description: The DockerHub repository name for the image. If not set it will default to 'htlle-da-builder'
+  docker-image:
+    description: The Docker repository name for the image. Defaults to 'htlle-da-builder'
     default: htlle-da-builder
     required: false
+  docker-tag:
+    description: The Docker tag used for the image. Defaults to 'latest' 
+    default: latest
+    required: false
   manual-mode:
-    description: If the repository should not be checked out automatically specify the complete workspace path to the thesis-path. If not set it will default to checking out the latest repository state
+    description: If the repository should not be checked out automatically specify the complete workspace path to the thesis-path. Defaults to checking out the latest repository state
     required: false
 
 runs:
   using: composite
 
   steps:
+    - name: Check Target
+      shell: bash
+      run: |
+        TARGET=$(echo "${{ inputs.target }}" | xargs | tr '[:upper:]' '[:lower:]')
+        if [[ "$TARGET" != "pdf" && "$TARGET" != "spellcheck" && "$TARGET" != "tex" ]]; then
+          echo "::error::Invalid target: $TARGET. Allowed targets are pdf, spellcheck or tex."
+          exit 1
+        fi
+
     - name: Checkout Repository
       if: ${{ !inputs.manual-mode }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set thesis-path From manual-mode
       if: ${{ inputs.manual-mode }}
@@ -56,11 +85,11 @@ runs:
 
     - name: Cache Docker Image
       id: cache-docker
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: /tmp/.docker
-        key: docker-${{ inputs.dockerhub-username }}-${{ inputs.dockerhub-repository }}-${{ hashFiles('**/da-base-template/tools/docker/Dockerfile') }}
-        restore-keys: docker-${{ inputs.dockerhub-username }}-${{ inputs.dockerhub-repository }}
+        key: docker-${{ inputs.docker-namespace }}-${{ inputs.docker-image }}-${{ hashFiles('**/da-base-template/tools/docker/Dockerfile') }}
+        restore-keys: docker-${{ inputs.docker-namespace }}-${{ inputs.docker-image }}
 
     - name: Create Docker Cache Directory
       if: steps.cache-docker.outputs.cache-hit != 'true'
@@ -76,44 +105,76 @@ runs:
       if: steps.cache-docker.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        docker pull ${{ inputs.dockerhub-username }}/${{ inputs.dockerhub-repository }}
-        docker save ${{ inputs.dockerhub-username }}/${{ inputs.dockerhub-repository }} -o /tmp/.docker/image.tar
+        docker pull ${{ inputs.docker-registry }}/${{ inputs.docker-namespace }}/${{ inputs.docker-image }}:${{ inputs.docker-tag }}
+        docker save ${{ inputs.docker-registry }}/${{ inputs.docker-namespace }}/${{ inputs.docker-image }}:${{ inputs.docker-tag }} -o /tmp/.docker/image.tar
 
     - name: Build Diploma Thesis
       shell: bash
-      run: docker run -v ${{ github.workspace }}/${{ inputs.thesis-path }}:/workspace ${{ inputs.dockerhub-username }}/${{ inputs.dockerhub-repository }}
+      run: |
+        docker run --rm \
+          -u $(id -u):$(id -g) \
+          -v "${{ github.workspace }}/${{ inputs.thesis-path }}:/workspace:rw" \
+          -e TARGETS=${{ inputs.target }} \
+          -e OUTPUT_DIR="/workspace/${{ inputs.output-dir }}" \
+          ${{ inputs.docker-registry }}/${{ inputs.docker-namespace }}/${{ inputs.docker-image }}:${{ inputs.docker-tag }}
 
     - name: Get UTC Timestamp
       id: timestamp
       shell: bash
       run: echo "datetime=$(date -u +'%Y-%m-%dT%H-%MZ')" >> $GITHUB_OUTPUT
 
-    - name: Rename PDF With Timestamp
-      shell: bash
-      run: mv ${{ inputs.thesis-path }}/diplomarbeit.pdf ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
-
-    - name: Upload Diploma Thesis
-      uses: actions/upload-artifact@v4
+    - name: Upload Diploma Thesis Artifact
+      uses: actions/upload-artifact@v7
       with:
-        name: diplomarbeit-${{ steps.timestamp.outputs.datetime }}
-        path: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
+        path: ${{ inputs.thesis-path }}/${{ inputs.output-dir }}/
+        name: ${{ inputs.target }}-${{ steps.timestamp.outputs.datetime }}
+
+    - name: Check Send Mail
+      id: check-mail
+      shell: bash
+      run: |
+        ALLOWED_TARGETS=$(echo "${{ inputs.send-mail-on-target }}" | xargs | tr '[:upper:]' '[:lower:]')
+        CURRENT_TARGET=$(echo "${{ inputs.target }}" | xargs | tr '[:upper:]' '[:lower:]')
+        echo "send=false" >> $GITHUB_OUTPUT
+        
+        if { [[ "$ALLOWED_TARGETS" == *"all"* ]] || [[ "$ALLOWED_TARGETS" == *"$CURRENT_TARGET"* ]]; } && \
+          [[ -n "${{ inputs.mail }}" ]] && \
+          [[ -n "${{ inputs.mail-password }}" ]] && \
+          [[ -n "${{ inputs.smtp-server }}" ]] && \
+          [[ -n "${{ inputs.smtp-port }}" ]] && \
+          [[ -n "${{ inputs.receiving-mails }}" ]]; then
+            echo "send=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Rename Attachment
+      if: ${{ steps.check-mail.outputs.send == 'true' }}
+      shell: bash
+      run: |
+        for file in ${{ inputs.thesis-path }}/${{ inputs.output-dir }}/*.{pdf,txt,tex}; do
+            [ -e "$file" ] || continue
+            ext="${file##*.}"
+            mv -- "$file" "${file%.*}-${{ steps.timestamp.outputs.datetime }}.$ext"
+        done
 
     - name: Extract Commit Message
-      if: ${{ inputs.mail != '' && inputs.mail-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.receiving-mail != '' && inputs.mail-body == '' }}
+      if: ${{ steps.check-mail.outputs.send == 'true' && inputs.mail-body == '' }}
       id: message
       shell: bash
       run: echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
 
     - name: Send Diploma Thesis
-      if: ${{ inputs.mail != '' && inputs.mail-password != '' && inputs.smtp-server != '' && inputs.smtp-port != '' && inputs.receiving-mail != '' }}
-      uses: dawidd6/action-send-mail@v5
+      if: ${{ steps.check-mail.outputs.send == 'true' }}
+      uses: dawidd6/action-send-mail@v18
       with:
         username: ${{ inputs.mail }}
         password: ${{ inputs.mail-password }}
         server_address: ${{ inputs.smtp-server }}
         server_port: ${{ inputs.smtp-port }}
-        to: ${{ inputs.receiving-mail }}
+        to: ${{ inputs.receiving-mails }}
         from: ${{ inputs.mail }}
-        subject: "Diplomarbeit"
+        subject: "Diploma thesis"
         body: ${{ inputs.mail-body || steps.message.outputs.commit_message }}
-        attachments: ${{ inputs.thesis-path }}/diplomarbeit-${{ steps.timestamp.outputs.datetime }}.pdf
+        attachments: |
+          ${{ inputs.thesis-path }}/${{ inputs.output-dir }}/*.pdf,
+          ${{ inputs.thesis-path }}/${{ inputs.output-dir }}/*.tex,
+          ${{ inputs.thesis-path }}/${{ inputs.output-dir }}/*.txt
