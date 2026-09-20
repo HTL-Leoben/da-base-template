@@ -333,9 +333,11 @@ $endif$
 % haben eine eigene Überschrift (Section, nicht die selbst mitgbrachte)
 %
 \makeatletter
-\renewcommand{\listoffigures}{\@starttoc{lof}}
-\renewcommand{\listoftables}{\@starttoc{lot}}
-\renewcommand{\lstlistoflistings}{\@starttoc{lol}}
+\AtBeginDocument{%
+  \renewcommand{\listoffigures}{\@starttoc{lof}}%
+  \renewcommand{\listoftables}{\@starttoc{lot}}%
+  \renewcommand{\lstlistoflistings}{\@starttoc{lol}}%
+}
 \makeatother
 
 
@@ -450,15 +452,32 @@ $if(csl-refs)$
 \setlength{\cslentryspacingunit}{\parskip}
 \usepackage{calc}
 
-% Compatibility with modern pandoc citeproc output
+% Compatibility with modern pandoc citeproc output (>= 3.1.7)
+% Pandoc emits \citeproc{id}{label}, these macros must exist in the preamble
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+  % Allow citations to break across lines
+  \let\@cite@ofmt\@firstofone
+  % Avoid brackets around text for \cite
+  \def\@biblabel#1{}
+  \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
 \newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry spacing
   {\setlength{\parindent}{0pt}%
    \ifodd #1
      \let\oldpar\par
      \def\par{\hangindent=\cslhangindent\oldpar}
    \fi
-   \setlength{\parskip}{#2\cslentryspacingunit}}
+   \setlength{\parskip}{#2\cslentryspacingunit}%
+   % Pandoc emits \bibitem, register cites without requiring a list environment
+   \def\@lbibitem[##1]##2{%
+     \if@filesw
+       {\let\protect\noexpand
+        \immediate\write\@auxout{\string\bibcite{##2}{##1}}}%
+     \ignorespaces}}
   {}
+\makeatother
 \newcommand{\CSLBlock}[1]{#1\hfill\break}
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth-\csllabelwidth}{#1}\break}
